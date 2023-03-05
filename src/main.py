@@ -1,4 +1,9 @@
-from registration_handlers import *
+from aiogram import Dispatcher, Bot, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.dispatcher import FSMContext
+from aiogram.dispatcher.filters import Text
+from aiogram.dispatcher.filters.state import StatesGroup, State
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 BOT_TOKEN = '5140163343:AAGaFLxhYrbFMaZ0aV0SRxHNgpJ4J3ld6EE'
 storage: MemoryStorage = MemoryStorage()
@@ -176,7 +181,3 @@ async def message_handler(message: types.Message, state: FSMContext):
         await message.reply(text + " - правильный адрес?", reply_markup=keyboard)
     except Exception:
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
-
-
-if __name__ == "__main__":
-    executor.start_polling(dp, skip_updates=True)
