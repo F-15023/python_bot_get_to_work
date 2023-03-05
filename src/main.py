@@ -45,6 +45,8 @@ class StateRegistration(StatesGroup):
     choosing_to_location = State()
 
 
+# choosing_role----------------------------------------------------------------------------------------------
+
 @dp.message_handler(Text(equals="Водитель"), state=StateRegistration.choosing_role)
 async def message_handler(message: types.Message, state: FSMContext):
     # db.add_driver(tg_id)
@@ -64,6 +66,8 @@ async def message_handler(message: types.Message, state: FSMContext):
     await StateRegistration.choosing_name.set()
 
 
+# choosing_name----------------------------------------------------------------------------------------------
+
 @dp.message_handler(state=StateRegistration.choosing_name)
 async def message_handler(message: types.Message, state: FSMContext):
     try:
@@ -82,6 +86,8 @@ async def message_handler(message: types.Message, state: FSMContext):
     except Exception:
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
 
+
+# choosing_phone----------------------------------------------------------------------------------------------
 
 @dp.message_handler(Text(equals="Да"), state=StateRegistration.choosing_phone)
 async def message_handler(message: types.Message, state: FSMContext):
@@ -120,6 +126,8 @@ async def message_handler(message: types.Message, state: FSMContext):
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
 
 
+# choosing_from_location----------------------------------------------------------------------------------------------
+
 @dp.message_handler(Text(equals="Да"), state=StateRegistration.choosing_from_location)
 async def message_handler(message: types.Message, state: FSMContext):
     print("Right address2")
@@ -152,6 +160,8 @@ async def message_handler(message: types.Message, state: FSMContext):
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
 
 
+# choosing_to_location----------------------------------------------------------------------------------------------
+
 @dp.message_handler(Text(equals="Да"), state=StateRegistration.choosing_to_location)
 async def message_handler(message: types.Message, state: FSMContext):
     print("Right address")
@@ -181,3 +191,5 @@ async def message_handler(message: types.Message, state: FSMContext):
         await message.reply(text + " - правильный адрес?", reply_markup=keyboard)
     except Exception:
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
+
+# end_of_registration ----------------------------------------------------------------------------------------------
