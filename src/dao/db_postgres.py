@@ -48,7 +48,7 @@ class DBPostgres:
             self.conn.commit()
 
     def add_passenger(self, tg_id, phone, name, start_point_wkt, finish_point_wkt, route_wkt):
-        query_string = f"INSERT INTO passenger_bio (id, name, phone) values ({tg_id},'{phone}','{name}');"
+        query_string = f"INSERT INTO passenger_bio (id, phone, name) values ({tg_id},'{phone}','{name}');"
         self.cursor.execute(query_string)
         self.conn.commit()
         query_string = f"INSERT INTO passenger_routes " \
@@ -62,7 +62,7 @@ class DBPostgres:
         self.conn.commit()
 
     def add_driver(self, tg_id, phone, name, start_point_wkt, finish_point_wkt, route_wkt):
-        query_string = f"INSERT INTO passenger_bio (id, name, phone) values ({tg_id},'{phone}','{name}');"
+        query_string = f"INSERT INTO  driver_bio (id, phone, name) values ({tg_id},'{phone}','{name}');"
         self.cursor.execute(query_string)
         self.conn.commit()
         query_string = f"INSERT INTO driver_routes " \
