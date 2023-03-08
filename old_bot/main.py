@@ -46,7 +46,7 @@ async def answer(message: types.Message):
     buttons = ["Водитель", "Пассажир"]
     keyboard.add(*buttons)
     await message.reply(text, reply_markup=keyboard)
-    await StateRegistration.choosing_role.set()
+    await States.choosing_role.set()
 
 
 @dispatcher.message_handler(Text(equals='Нет, в другой раз...'))
@@ -54,7 +54,7 @@ async def answer(message: types.Message):
     await message.reply("Ok)", reply_markup=types.ReplyKeyboardRemove())
 
 
-class StateRegistration(StatesGroup):
+class States(StatesGroup):
     choosing_role = State()
     choosing_name = State()
     choosing_phone = State()
@@ -64,29 +64,29 @@ class StateRegistration(StatesGroup):
 
 # choosing_role----------------------------------------------------------------------------------------------
 
-@dispatcher.message_handler(Text(equals="Водитель"), state=StateRegistration.choosing_role)
+@dispatcher.message_handler(Text(equals="Водитель"), state=States.choosing_role)
 async def message_handler(message: types.Message, state: FSMContext):
     user: User = user_by_id[message.from_user.id]
     user.role = "driver"
     await state.finish()
 
     await message.reply("Укажите Ваше имя - как к Вам можно обращаться?", reply_markup=types.ReplyKeyboardRemove())
-    await StateRegistration.choosing_name.set()
+    await States.choosing_name.set()
 
 
-@dispatcher.message_handler(Text(equals="Пассажир"), state=StateRegistration.choosing_role)
+@dispatcher.message_handler(Text(equals="Пассажир"), state=States.choosing_role)
 async def message_handler(message: types.Message, state: FSMContext):
     user: User = user_by_id[message.from_user.id]
     user.role = "passenger"
     await state.finish()
 
     await message.reply("Укажите Ваше имя - как к Вам можно обращаться?", reply_markup=types.ReplyKeyboardRemove())
-    await StateRegistration.choosing_name.set()
+    await States.choosing_name.set()
 
 
 # choosing_name----------------------------------------------------------------------------------------------
 
-@dispatcher.message_handler(state=StateRegistration.choosing_name)
+@dispatcher.message_handler(state=States.choosing_name)
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         user: User = user_by_id[message.from_user.id]
@@ -99,29 +99,29 @@ async def message_handler(message: types.Message, state: FSMContext):
                                              request_contact=True)
         keyboard.add(phone_number_button)
         await message.answer(text, reply_markup=keyboard)
-        await StateRegistration.choosing_phone.set()
+        await States.choosing_phone.set()
     except Exception:
         await message.reply("Что-то пошло не так...", reply_markup=types.ReplyKeyboardRemove())
 
 
 # choosing_phone----------------------------------------------------------------------------------------------
 
-@dispatcher.message_handler(Text(equals="Да"), state=StateRegistration.choosing_phone)
+@dispatcher.message_handler(Text(equals="Да"), state=States.choosing_phone)
 async def message_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
     text = "Отлично, теперь укажите откуда вы едете на работу"
     await message.reply(text, reply_markup=types.ReplyKeyboardRemove())
-    await StateRegistration.choosing_from_location.set()
+    await States.choosing_from_location.set()
 
 
-@dispatcher.message_handler(Text(equals="Нет"), state=StateRegistration.choosing_phone)
+@dispatcher.message_handler(Text(equals="Нет"), state=States.choosing_phone)
 async def message_handler(message: types.Message):
     print("Wrong phone")
     await message.reply("Попробуйте указать еще раз", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dispatcher.message_handler(state=StateRegistration.choosing_phone, content_types='any')
+@dispatcher.message_handler(state=States.choosing_phone, content_types='any')
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         if message.text is not None:
@@ -143,22 +143,22 @@ async def message_handler(message: types.Message, state: FSMContext):
 
 # choosing_from_location----------------------------------------------------------------------------------------------
 
-@dispatcher.message_handler(Text(equals="Да"), state=StateRegistration.choosing_from_location)
+@dispatcher.message_handler(Text(equals="Да"), state=States.choosing_from_location)
 async def message_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
     text = "Отлично, теперь укажите куда вы едете на работу"
     await message.reply(text, reply_markup=types.ReplyKeyboardRemove())
-    await StateRegistration.choosing_to_location.set()
+    await States.choosing_to_location.set()
 
 
-@dispatcher.message_handler(Text(equals="Нет"), state=StateRegistration.choosing_from_location)
+@dispatcher.message_handler(Text(equals="Нет"), state=States.choosing_from_location)
 async def message_handler(message: types.Message):
     print(message.text)
     await message.reply("Попробуйте указать еще раз", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dispatcher.message_handler(state=StateRegistration.choosing_from_location)
+@dispatcher.message_handler(state=States.choosing_from_location)
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         lat, lon = geocoder.get_coordinates_by_text(message.text)
@@ -178,7 +178,7 @@ async def message_handler(message: types.Message, state: FSMContext):
 
 # choosing_to_location----------------------------------------------------------------------------------------------
 
-@dispatcher.message_handler(Text(equals="Да"), state=StateRegistration.choosing_to_location)
+@dispatcher.message_handler(Text(equals="Да"), state=States.choosing_to_location)
 async def message_handler(message: types.Message, state: FSMContext):
     await state.finish()
 
@@ -188,12 +188,12 @@ async def message_handler(message: types.Message, state: FSMContext):
     await message.reply(text, reply_markup=types.ReplyKeyboardRemove())
 
 
-@dispatcher.message_handler(Text(equals="Нет"), state=StateRegistration.choosing_to_location.state)
+@dispatcher.message_handler(Text(equals="Нет"), state=States.choosing_to_location.state)
 async def message_handler(message: types.Message):
     await message.reply("Попробуйте указать еще раз", reply_markup=types.ReplyKeyboardRemove())
 
 
-@dispatcher.message_handler(state=StateRegistration.choosing_to_location.state)
+@dispatcher.message_handler(state=States.choosing_to_location.state)
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         lat, lon = geocoder.get_coordinates_by_text(message.text)

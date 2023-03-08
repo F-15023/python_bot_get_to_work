@@ -91,7 +91,7 @@ BEGIN
     ALTER TABLE IF EXISTS public.passenger_routes OWNER to postgres;
 
 
-    DROP FUNCTION IF EXISTS get_passengers_near_driver_route(bigint);
+   DROP FUNCTION IF EXISTS get_passengers_near_driver_route(bigint, bigint);
     CREATE OR REPLACE FUNCTION get_passengers_near_driver_route(_driver_id bigint, _max_distance bigint)
     returns table (
       id bigint,
@@ -103,14 +103,14 @@ BEGIN
     DECLARE
       driver_route geometry;
     BEGIN
-      driver_route := (select ST_Transform(route, 3857) from drivers where drivers.id = _driver_id);
+      driver_route := (select ST_Transform(route, 3857) from driver_routes where driver_routes.id = _driver_id);
       RETURN QUERY
-          SELECT passengers.id, passengers.phone, passengers.name,
+          SELECT passenger_bio.id, passenger_bio.phone, passenger_bio.name,
           ST_Distance(ST_Transform(start_point, 3857),driver_route),
-          ST_Distance(ST_Transform(end_point, 3857), driver_route)
+          ST_Distance(ST_Transform(finish_point, 3857), driver_route)
           FROM passenger_bio, passenger_routes
           WHERE ST_Distance(ST_Transform(start_point, 3857),driver_route) < _max_distance
-          OR ST_Distance(ST_Transform(end_point, 3857), driver_route) < _max_distance;
+          OR ST_Distance(ST_Transform(finish_point, 3857), driver_route) < _max_distance;
       END; $$
     LANGUAGE 'plpgsql';
 

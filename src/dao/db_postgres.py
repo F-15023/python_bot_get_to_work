@@ -80,10 +80,11 @@ class DBPostgres:
         self.cursor.execute(query_string)
         self.conn.commit()
 
-    def get_user_id(self, user_id):
-        """Достаем id юзера в базе по его user_id"""
-        result = self.cursor.execute("SELECT `id` FROM `users` WHERE `user_id` = ?", (user_id,))
-        return result.fetchone()[0]
+    def get_user_role(self, tg_id):
+        query_string = f"SELECT role FROM users WHERE users.id={tg_id};"
+        self.cursor.execute(query_string)
+        role = self.cursor.fetchall()[0][0]
+        return role
 
     def show_postgres_version(self):
         self.cursor.execute('SELECT version();')
@@ -95,7 +96,17 @@ class DBPostgres:
         max_distance = 5000
         query_string = f"SELECT * FROM get_passengers_near_driver_route({driver_id},{max_distance})"
         self.cursor.execute(query_string)
-        print(self.cursor.fetchall())
+        result = self.cursor.fetchall()
+        string_result = 'Ближайшие пассажиры:'
+        for row in result:
+            string_result = string_result + f"\n------------------------------------------------\n" \
+                                            f"[id={row[0]}]\n" \
+                                            f"Телефон={row[1]}\n" \
+                                            f"Имя={row[2]}\n" \
+                                            f"Расстояние до маршрута от начальной точки={int(row[3])} м\n" \
+                                            f"Расстояние до маршрута от конечной точки={int(row[4])} м\n" \
+                                            f"\n------------------------------------------------\n"
+        return string_result
 
     def close(self):
         """Закрываем соединение с БД"""
@@ -116,6 +127,7 @@ if __name__ == "__main__":
     print("Test somthing!")
     db = DBPostgres()
     db.show_postgres_version()
+    db.get_user_role(248878066)
 
     # db.add_passenger(1, 88005553535, "ivan", "POINT(52.421357642664816 55.75949648328125)",
     #                  "POINT(52.438680649410675 55.729554159602486)")
