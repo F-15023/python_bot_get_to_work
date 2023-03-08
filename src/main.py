@@ -3,7 +3,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.state import StatesGroup, State
 
 from handlers import registration
-from src.handlers import start, driver
+from src.handlers import start, driver, passenger
 
 
 async def main():
@@ -13,6 +13,7 @@ async def main():
     dp.include_router(start.router)
     dp.include_router(registration.router)
     dp.include_router(driver.router)
+    dp.include_router(passenger.router)
 
     # Запускаем бота и пропускаем все накопленные входящие
     # Да, этот метод можно вызвать даже если у вас поллинг

@@ -114,5 +114,29 @@ BEGIN
       END; $$
     LANGUAGE 'plpgsql';
 
+   DROP FUNCTION IF EXISTS get_drivers_near_passenger(bigint, bigint);
+    CREATE OR REPLACE FUNCTION get_drivers_near_passenger(_id bigint, _max_distance bigint)
+    returns table (
+      id bigint,
+      phone text,
+      name text,
+      start_point_distance float,
+      end_point_distance float) as
+    $$
+    DECLARE
+      _start_point geometry;
+      _finish_point geometry;
+    BEGIN
+      _start_point := (select ST_Transform(start_point, 3857) from passenger_routes where passenger_routes.id = _id);
+      _finish_point := (select ST_Transform(finish_point, 3857) from passenger_routes where passenger_routes.id = _id);
+      RETURN QUERY
+          SELECT driver_bio.id, driver_bio.phone, driver_bio.name,
+          ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point),
+          ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point)
+          FROM driver_bio, driver_routes
+          WHERE ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point) < _max_distance
+          OR ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point) < _max_distance;
+      END; $$
+    LANGUAGE 'plpgsql';
 
 END; $$
