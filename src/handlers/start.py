@@ -1,13 +1,11 @@
-from aiogram import Router
+from aiogram import Router, types
 from aiogram.filters import Text
 from aiogram.fsm.state import StatesGroup, State
 
 from src.dao.db_postgres import DBPostgres
-from src.pojo.geocoding import Geocoder
+from src.utils.geocoding import Geocoder
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
-
-from src.pojo.utils import *
 
 router = Router()
 geocoder = Geocoder()
@@ -33,44 +31,66 @@ async def answer(message: types.Message, state: FSMContext):
 
     if db.is_user_exists(uid):
         if db.get_user_role(uid) in 'driver':
-            buttons = [
-                [
-                    types.KeyboardButton(text="Показать ближайших пассажиров"),
-                ],
-                [types.KeyboardButton(text="Я зарегистрирован, но хочу удалить мои данные")]
-            ]
-            text = 'Готов к работе'
-            await state.set_state(States.driver)
+            await driver_ready(message, state)
         else:
-            buttons = [
-                [
-                    types.KeyboardButton(text="Показать ближайших водителей"),
-                ],
-                [types.KeyboardButton(text="Я зарегистрирован, но хочу удалить мои данные")]
-            ]
-            text = 'Готов к работе'
-            await state.set_state(States.passenger)
+            await passenger_ready(message, state)
 
     else:
-        buttons = [
-            [
-                types.KeyboardButton(text="Нет, в другой раз..."),
-                types.KeyboardButton(text="Заполнить")
-            ]
-        ]
-        text = 'Поехали Вместе - это бот для поиска попутчиков по пути на работу.' \
-               ' {Далее идет краткое описание работы бота}.' \
-               ' Для использования бота нужно заполнить анкету. Заполнить сейчас?'
-        await state.set_state(States.registration)
-
-    keyboard = types.ReplyKeyboardMarkup(keyboard=buttons,
-                                         resize_keyboard=True,
-                                         one_time_keyboard=False,
-                                         input_field_placeholder="Нажмите на одну из кнопок ниже")
-    await message.answer(text, reply_markup=keyboard)
+        await registration(message, state)
 
 
 @router.message(Text(text=["Я зарегистрирован, но хочу удалить мои данные"]))
 async def answer(message: types.Message):
     db.drop_user(message.from_user.id)
     await message.reply("Ваши данные удалены", reply_markup=types.ReplyKeyboardRemove())
+
+
+async def registration(_message: types.Message, _state: FSMContext):
+    buttons = [
+        [
+            types.KeyboardButton(text="Нет, в другой раз..."),
+            types.KeyboardButton(text="Заполнить")
+        ]
+    ]
+    text = 'Поехали Вместе - это бот для поиска попутчиков по пути на работу.' \
+           ' {Далее идет краткое описание работы бота}.' \
+           ' Для использования бота нужно заполнить анкету. Заполнить сейчас?'
+    await _state.set_state(States.registration)
+
+    keyboard = types.ReplyKeyboardMarkup(keyboard=buttons,
+                                         resize_keyboard=True,
+                                         one_time_keyboard=False,
+                                         input_field_placeholder="Нажмите на одну из кнопок ниже")
+    await _message.answer(text, reply_markup=keyboard)
+
+
+async def driver_ready(_message: types.Message, _state: FSMContext):
+    buttons = [
+        [
+            types.KeyboardButton(text="Показать ближайших пассажиров"),
+        ],
+        [types.KeyboardButton(text="Я зарегистрирован, но хочу удалить мои данные")]
+    ]
+    text = 'Готов к работе'
+    await _state.set_state(States.driver)
+    keyboard = types.ReplyKeyboardMarkup(keyboard=buttons,
+                                         resize_keyboard=True,
+                                         one_time_keyboard=False,
+                                         input_field_placeholder="Нажмите на одну из кнопок ниже")
+    await _message.answer(text, reply_markup=keyboard)
+
+
+async def passenger_ready(_message: types.Message, _state: FSMContext):
+    buttons = [
+        [
+            types.KeyboardButton(text="Показать ближайших водителей"),
+        ],
+        [types.KeyboardButton(text="Я зарегистрирован, но хочу удалить мои данные")]
+    ]
+    text = 'Готов к работе'
+    await _state.set_state(States.passenger)
+    keyboard = types.ReplyKeyboardMarkup(keyboard=buttons,
+                                         resize_keyboard=True,
+                                         one_time_keyboard=False,
+                                         input_field_placeholder="Нажмите на одну из кнопок ниже")
+    await _message.answer(text, reply_markup=keyboard)

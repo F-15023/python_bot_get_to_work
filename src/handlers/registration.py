@@ -1,9 +1,9 @@
 from aiogram import types, Router, F
 from aiogram.filters import Text
 from src.dao.db_postgres import DBPostgres
-from src.handlers.start import States
-from src.pojo.geocoding import Geocoder
-from src.pojo.user import User
+from src.handlers.start import States, driver_ready, passenger_ready
+from src.utils.geocoding import Geocoder
+from src.utils.user import User
 from aiogram.fsm.context import FSMContext
 
 router = Router()
@@ -160,10 +160,16 @@ async def message_handler(message: types.Message, state: FSMContext):
 @router.message(States.choosing_to_location, F.text.in_("Да"))
 async def message_handler(message: types.Message, state: FSMContext):
     user: User = user_by_id[message.from_user.id]
+    user.route = geocoder.get_route(user.from_location, user.to_location)
     print(user.to_string())
     db.complete_registration(user_by_id[message.from_user.id])
-    user_by_id.pop(message.from_user.id, None)
     await message.reply("Спасибо за регистрацию!", reply_markup=types.ReplyKeyboardRemove())
+    if user.role == 'driver':
+        await driver_ready(message, state)
+    else:
+        await passenger_ready(message, state)
+
+    user_by_id.pop(message.from_user.id, None)
 
 
 @router.message(States.choosing_to_location, F.text.in_("Нет"))

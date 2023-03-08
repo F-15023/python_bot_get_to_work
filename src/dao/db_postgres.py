@@ -2,7 +2,7 @@ import math
 
 import psycopg2
 
-from src.pojo.user import User
+from src.utils.user import User
 
 
 class DBPostgres:

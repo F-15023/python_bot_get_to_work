@@ -4,8 +4,8 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import StatesGroup, State
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
-from src.pojo.geocoding import Geocoder
-from src.pojo.user import User
+from src.utils.geocoding import Geocoder
+from src.utils.user import User
 
 BOT_TOKEN = '5140163343:AAGaFLxhYrbFMaZ0aV0SRxHNgpJ4J3ld6EE'
 storage: MemoryStorage = MemoryStorage()
