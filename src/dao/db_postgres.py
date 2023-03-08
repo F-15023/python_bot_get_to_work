@@ -2,6 +2,8 @@ import math
 
 import psycopg2
 
+from src.pojo.user import User
+
 
 class DBPostgres:
 
@@ -9,109 +11,91 @@ class DBPostgres:
         self.conn = psycopg2.connect(
             host="localhost",
             port=5432,
-            database="db1",
+            database="gettowork_main",
             user="postgres",
-            password="VFRcbv0110")
+            password="")
         self.cursor = self.conn.cursor()
 
-    def user_exists(self, user_id):
-        """Проверяем, есть ли юзер в базе"""
-        result = self.cursor.execute("SELECT `user_id` FROM `users` WHERE `user_id` = ?", (user_id,))
+    def add_user(self, tg_id, role):
+        cursor = self.cursor
+        query_string = f"INSERT INTO users (id, role, is_active) values ({tg_id}, '{role}', false);"
+        cursor.execute(query_string)
+        self.conn.commit()
+
+    def is_user_exists(self, tg_id):
+        self.cursor.execute(f"SELECT id FROM users WHERE id = {tg_id};")
+        result = self.cursor.fetchall()
+        return bool(len(result))
+
+    def drop_user(self, tg_id):
+        self.cursor.execute(f"DELETE FROM users WHERE id = {tg_id};")
+        self.conn.commit()
+
+    def is_user_active(self, tg_id):
+        result = self.cursor.execute("SELECT id FROM users WHERE id = ? AND is_active=true", (tg_id,))
         return bool(len(result.fetchall()))
+
+    def complete_registration(self, user: User):
+        if user.role == 'driver':
+            self.add_driver(user.tg_id, user.phone, user.name, user.from_location, user.to_location, user.route)
+            query_string = f"UPDATE users SET is_active = true where id={user.tg_id};"
+            self.cursor.execute(query_string)
+            self.conn.commit()
+        else:
+            self.add_passenger(user.tg_id, user.phone, user.name, user.from_location, user.to_location, user.route)
+            query_string = f"UPDATE users SET is_active = true where id={user.tg_id};"
+            self.cursor.execute(query_string)
+            self.conn.commit()
+
+    def add_passenger(self, tg_id, phone, name, start_point_wkt, finish_point_wkt, route_wkt):
+        query_string = f"INSERT INTO passenger_bio (id, name, phone) values ({tg_id},'{phone}','{name}');"
+        self.cursor.execute(query_string)
+        self.conn.commit()
+        query_string = f"INSERT INTO passenger_routes " \
+                       f"(id, start_point, start_point_wkt, finish_point, finish_point_wkt, route, route_wkt) " \
+                       f"values ({tg_id}," \
+                       f"ST_GeomFromText('{start_point_wkt}', 4326), '{start_point_wkt}', " \
+                       f"ST_GeomFromText('{finish_point_wkt}', 4326), '{finish_point_wkt}', " \
+                       f" ST_GeomFromText('{route_wkt}', 4326), '{route_wkt}');"
+        print(query_string)
+        self.cursor.execute(query_string)
+        self.conn.commit()
+
+    def add_driver(self, tg_id, phone, name, start_point_wkt, finish_point_wkt, route_wkt):
+        query_string = f"INSERT INTO passenger_bio (id, name, phone) values ({tg_id},'{phone}','{name}');"
+        self.cursor.execute(query_string)
+        self.conn.commit()
+        query_string = f"INSERT INTO driver_routes " \
+                       f"(id, start_point, start_point_wkt, finish_point, finish_point_wkt, route, route_wkt) " \
+                       f"values ({tg_id}," \
+                       f"ST_GeomFromText('{start_point_wkt}', 4326), '{start_point_wkt}'," \
+                       f"ST_GeomFromText('{finish_point_wkt}', 4326), '{finish_point_wkt}', " \
+                       f"ST_GeomFromText('{route_wkt}', 4326), '{route_wkt}' );"
+        print(query_string)
+        self.cursor.execute(query_string)
+        self.conn.commit()
+
+    def delete_user(self, tg_id):
+        query_string = f"DELETE FROM users WHERE id={tg_id};"
+        self.cursor.execute(query_string)
+        self.conn.commit()
 
     def get_user_id(self, user_id):
         """Достаем id юзера в базе по его user_id"""
         result = self.cursor.execute("SELECT `id` FROM `users` WHERE `user_id` = ?", (user_id,))
         return result.fetchone()[0]
 
-    def add_name(self, user_id, name):
-        """Создаем запись об имени"""
-        self.cursor.execute("INSERT INTO `records` (`users_id`, `name`) VALUES (?, ?)", (user_id, name))
-
-        return self.conn.commit()
-
-    def add_user(self, user_id):
-        """Добавляем юзера в базу"""
-        self.cursor.execute("INSERT INTO `users` (`user_id`) VALUES (?)", (user_id,))
-        return self.conn.commit()
-
-    def add_record_driverorpass(self, user_id, driverorpass):
-        """Создаем запись Водитель/пасажир"""
-        if self.user_exists(user_id):
-            self.cursor.execute("UPDATE `records` SET `driverorpass` = ? WHERE users_id=?", (driverorpass, user_id))
-        else:
-            self.cursor.execute("INSERT INTO `records` (`users_id`, `driverorpass`) VALUES (?, ?)",
-                            (user_id,
-                             driverorpass))
-        return self.conn.commit()
-
-    def add_startpoint(self, user_id, startpoint):
-        """Создаем запись о месте отправки"""
-        if self.user_exists(user_id):
-            self.cursor.execute("UPDATE `records` SET `startpoint` = ? WHERE users_id=?", (startpoint, user_id))
-        else:
-            self.cursor.execute("INSERT INTO `records` (`users_id`, `startpoint`) VALUES (?, ?)",
-                            (user_id,
-                             startpoint))
-        return self.conn.commit()
-
-    def add_endpoint(self, user_id, endpoint):
-        """Создаем запись о адресе работы"""
-        if self.user_exists(user_id):
-            self.cursor.execute("UPDATE `records` SET `endpoint` = ? WHERE users_id=?", (endpoint, user_id))
-        else:
-            self.cursor.execute("INSERT INTO `records` (`users_id`, `endpoint`) VALUES (?, ?)",
-                            (user_id,
-                             endpoint))
-        return self.conn.commit()
-
-    def add_record_phone(self, user_id, phone):
-        """Создаем запись о номере телефона"""
-        if self.user_exists(user_id):
-            self.cursor.execute("UPDATE `records` SET `phone` = ? WHERE users_id=?", (phone, user_id))
-        else:
-            self.cursor.execute("INSERT INTO `records` (`users_id`, `phone`) VALUES (?, ?)",
-                            (user_id,
-                             phone))
-        return self.conn.commit()
-
-    def get_startpoint(self, user_id):
-        """Достаем по user_id координаты точек"""
-        result = self.cursor.execute("SELECT `startpoint` FROM `records` WHERE `users_id` = ?", (user_id,))
-        return result.fetchone()[0]
-
-    def get_endpoint(self, user_id):
-        """Достаем по user_id координаты точек"""
-        result = self.cursor.execute("SELECT `endpoint` FROM `records` WHERE `users_id` = ?", (user_id,))
-        return result.fetchone()[0]
-
     def show_postgres_version(self):
-        cursor = self.cursor
-        cursor.execute('SELECT version();')
-        db_version = cursor.fetchone()
+        self.cursor.execute('SELECT version();')
+        db_version = self.cursor.fetchone()
         print("Postgres version:")
         print(db_version)
 
-    def add_passenger(self, tg_id, phone, name, start_point_wkt, end_point_wkt):
-        cursor = self.cursor
-        query_string = f"SELECT add_passenger({tg_id},'{phone}','{name}','{start_point_wkt}','{end_point_wkt}');"
-        print("Adding passenger record: " + query_string)
-        cursor.execute(query_string)
-        self.conn.commit()
-
-    def add_driver(self, tg_id, phone, name, start_point_wkt, end_point_wkt, route_wkt):
-        cursor = self.cursor
-        query_string = f"SELECT add_driver({tg_id},'{phone}','{name}','{start_point_wkt}','{end_point_wkt}', '{route_wkt}');"
-        print("Adding driver record: " + query_string)
-        cursor.execute(query_string)
-        self.conn.commit()
-
     def get_passengers_near_driver_route(self, driver_id):
         max_distance = 5000
-        cursor = self.cursor
         query_string = f"SELECT * FROM get_passengers_near_driver_route({driver_id},{max_distance})"
-        cursor.execute(query_string)
-        print(cursor.fetchall())
+        self.cursor.execute(query_string)
+        print(self.cursor.fetchall())
 
     def close(self):
         """Закрываем соединение с БД"""
