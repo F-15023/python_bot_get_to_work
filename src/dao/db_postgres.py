@@ -97,7 +97,7 @@ class DBPostgres:
         print(db_version)
 
     def get_passengers_near_driver(self, uid):
-        max_distance = 5000
+        max_distance = 500
         query_string = f"SELECT * FROM get_passengers_near_driver_route({uid},{max_distance})"
         self.cursor.execute(query_string)
         result = self.cursor.fetchall()
@@ -108,12 +108,11 @@ class DBPostgres:
                                             f"Телефон={row[1]}\n" \
                                             f"Имя={row[2]}\n" \
                                             f"Расстояние от моего маршрута до начальной точки пассажира={int(row[3])} м\n" \
-                                            f"Расстояние от моего маршрута до конечной точки пассажира={int(row[4])} м\n" \
-                                            f"\n------------------------------------------------\n"
+                                            f"Расстояние от моего маршрута до конечной точки пассажира={int(row[4])} м\n"
         return string_result
 
     def get_drivers_near_passenger(self, uid):
-        max_distance = 5000
+        max_distance = 500
         query_string = f"SELECT * FROM get_drivers_near_passenger({uid},{max_distance})"
         self.cursor.execute(query_string)
         result = self.cursor.fetchall()
@@ -124,8 +123,7 @@ class DBPostgres:
                                             f"Телефон={row[1]}\n" \
                                             f"Имя={row[2]}\n" \
                                             f"Расстояние от моей начальной точки до маршрута водителя={int(row[3])} м\n" \
-                                            f"Расстояние от моей конечной точки  до маршрута водителя={int(row[4])} м\n" \
-                                            f"\n------------------------------------------------\n"
+                                            f"Расстояние от моей конечной точки  до маршрута водителя={int(row[4])} м\n"
         return string_result
 
     def close(self):

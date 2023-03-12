@@ -2,7 +2,7 @@ java -jar server_route_finder.jar -Xmx100mb
 
 Examples of requests:
 
-localhost:12777/type=route&point=52,54&point=lon,lat
+localhost:12777/type=route&point=52,54&point=lat,lon
 
 {
     "type": "route",

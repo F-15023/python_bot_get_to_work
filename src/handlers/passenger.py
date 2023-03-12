@@ -7,7 +7,7 @@ router = Router()
 db = DBPostgres()
 
 
-@router.message(States.passenger, Text(text=['Показать ближайших водителей']))
+@router.message(Text(text=['Показать ближайших водителей']))
 async def answer(message: types.Message):
     uid = message.from_user.id
     text = db.get_drivers_near_passenger(uid)

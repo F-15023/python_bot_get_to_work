@@ -105,7 +105,7 @@ BEGIN
 	  ST_Distance(finish_point, _driver_route)
 	  FROM passenger_bio JOIN passenger_routes ON passenger_bio.id=passenger_routes.id
 	  WHERE ST_Distance(start_point, _driver_route) <= _max_distance
-	  OR ST_Distance(finish_point, _driver_route) <= _max_distance;
+	  AND ST_Distance(finish_point, _driver_route) <= _max_distance;
   END; $$
 LANGUAGE 'plpgsql';
 
@@ -126,18 +126,13 @@ DECLARE
 BEGIN
   _start_point := (select start_point from passenger_routes where passenger_routes.id = _id);
   _finish_point := (select finish_point from passenger_routes where passenger_routes.id = _id);
-
-  raise notice '%', ( SELECT ST_Distance(driver_routes.route, _start_point)	  FROM driver_routes);
-  raise notice '%',( SELECT ST_Distance(driver_routes.route, _finish_point)	  FROM driver_routes);
---   raise notice '%', ();
-
   RETURN QUERY
 	  SELECT driver_bio.id, driver_bio.phone, driver_bio.name,
 	  ST_Distance(driver_routes.route, _start_point),
 	  ST_Distance(driver_routes.route, _finish_point)
 	  FROM driver_bio JOIN driver_routes ON driver_bio.id=driver_routes.id
 	  WHERE ST_Distance(driver_routes.route,_start_point) <= _max_distance
-	  OR ST_Distance(driver_routes.route, _finish_point) <= _max_distance;
+	  AND ST_Distance(driver_routes.route, _finish_point) <= _max_distance;
   END;
 $BODY$;
 	
