@@ -104,8 +104,8 @@ BEGIN
 	  ST_Distance(ST_Transform(start_point, 3857),driver_route),
 	  ST_Distance(ST_Transform(finish_point, 3857), driver_route)
 	  FROM passenger_bio, passenger_routes
-	  WHERE ST_Distance(ST_Transform(start_point, 3857),driver_route) < _max_distance
-	  OR ST_Distance(ST_Transform(finish_point, 3857), driver_route) < _max_distance;
+	  WHERE ST_Distance(ST_Transform(start_point, 3857),driver_route) <= _max_distance
+	  OR ST_Distance(ST_Transform(finish_point, 3857), driver_route) <= _max_distance;
   END; $$
 LANGUAGE 'plpgsql';
 
@@ -129,8 +129,8 @@ BEGIN
 	  ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point),
 	  ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point)
 	  FROM driver_bio, driver_routes
-	  WHERE ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point) < _max_distance
-	  OR ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point) < _max_distance;
+	  WHERE ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point) <= _max_distance
+	  OR ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point) <= _max_distance;
   END; $$
 LANGUAGE 'plpgsql';
 	
