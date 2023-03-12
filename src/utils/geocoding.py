@@ -15,10 +15,14 @@ class Geocoder:
             return location_string
 
     def get_route(self, point_wkt_1, point_wkt_2):
-        lon1 = str(point_wkt_1).replace("POINT(", "").replace(")", "").split(" ")[0]
-        lat1 = str(point_wkt_1).replace("POINT(", "").replace(")", "").split(" ")[1]
-        lon2 = str(point_wkt_2).replace("POINT(", "").replace(")", "").split(" ")[0]
-        lat2 = str(point_wkt_2).replace("POINT(", "").replace(")", "").split(" ")[1]
+        lat1 = str(point_wkt_1).replace("POINT(", "").replace(")", "").split(" ")[0]
+        lon1 = str(point_wkt_1).replace("POINT(", "").replace(")", "").split(" ")[1]
+        lat2 = str(point_wkt_2).replace("POINT(", "").replace(")", "").split(" ")[0]
+        lon2 = str(point_wkt_2).replace("POINT(", "").replace(")", "").split(" ")[1]
+
+
+
+        print(f'http://localhost:12777/type=route&point={lat1},{lon1}&point={lat2},{lon2}')
 
         response = requests.get(f'http://localhost:12777/type=route&point={lat1},{lon1}&point={lat2},{lon2}')
         route_wkt = str(response.content).replace("b", "").replace("'", "")

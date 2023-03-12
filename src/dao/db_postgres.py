@@ -52,11 +52,13 @@ class DBPostgres:
         self.cursor.execute(query_string)
         self.conn.commit()
         query_string = f"INSERT INTO passenger_routes " \
-                       f"(id, start_point, start_point_wkt, finish_point, finish_point_wkt, route, route_wkt) " \
+                       f"(id, start_point, start_point_wkt, " \
+                       f"finish_point, finish_point_wkt, " \
+                       f"route, route_wkt) " \
                        f"values ({tg_id}," \
-                       f"ST_GeomFromText('{start_point_wkt}', 4326), '{start_point_wkt}', " \
-                       f"ST_GeomFromText('{finish_point_wkt}', 4326), '{finish_point_wkt}', " \
-                       f" ST_GeomFromText('{route_wkt}', 4326), '{route_wkt}');"
+                       f"ST_Transform(ST_GeomFromText('{start_point_wkt}', 4326),3857), '{start_point_wkt}', " \
+                       f"ST_Transform(ST_GeomFromText('{finish_point_wkt}', 4326),3857), '{finish_point_wkt}', " \
+                       f"ST_Transform(ST_GeomFromText('{route_wkt}', 4326),3857), '{route_wkt}');"
         print(query_string)
         self.cursor.execute(query_string)
         self.conn.commit()
@@ -66,11 +68,13 @@ class DBPostgres:
         self.cursor.execute(query_string)
         self.conn.commit()
         query_string = f"INSERT INTO driver_routes " \
-                       f"(id, start_point, start_point_wkt, finish_point, finish_point_wkt, route, route_wkt) " \
+                       f"(id, start_point, start_point_wkt, " \
+                       f"finish_point, finish_point_wkt, " \
+                       f"route, route_wkt) " \
                        f"values ({tg_id}," \
-                       f"ST_GeomFromText('{start_point_wkt}', 4326), '{start_point_wkt}'," \
-                       f"ST_GeomFromText('{finish_point_wkt}', 4326), '{finish_point_wkt}', " \
-                       f"ST_GeomFromText('{route_wkt}', 4326), '{route_wkt}' );"
+                       f"ST_Transform(ST_GeomFromText('{start_point_wkt}', 4326),3857), '{start_point_wkt}'," \
+                       f"ST_Transform(ST_GeomFromText('{finish_point_wkt}', 4326),3857), '{finish_point_wkt}', " \
+                       f"ST_Transform(ST_GeomFromText('{route_wkt}', 4326),3857), '{route_wkt}' );"
         print(query_string)
         self.cursor.execute(query_string)
         self.conn.commit()
@@ -92,7 +96,7 @@ class DBPostgres:
         print("Postgres version:")
         print(db_version)
 
-    def get_passengers_near_driver_route(self, uid):
+    def get_passengers_near_driver(self, uid):
         max_distance = 5000
         query_string = f"SELECT * FROM get_passengers_near_driver_route({uid},{max_distance})"
         self.cursor.execute(query_string)
@@ -113,7 +117,7 @@ class DBPostgres:
         query_string = f"SELECT * FROM get_drivers_near_passenger({uid},{max_distance})"
         self.cursor.execute(query_string)
         result = self.cursor.fetchall()
-        string_result = 'Ближайшие пассажиры:'
+        string_result = 'Ближайшие водители:'
         for row in result:
             string_result = string_result + f"\n------------------------------------------------\n" \
                                             f"[id={row[0]}]\n" \

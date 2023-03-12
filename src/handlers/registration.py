@@ -135,7 +135,7 @@ async def message_handler(message: types.Message):
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         lat, lon = geocoder.get_coordinates_by_text(message.text)
-        wkt = f"POINT({lon} {lat})"
+        wkt = f"POINT({lat} {lon})"
 
         user: User = user_by_id[message.from_user.id]
         user.from_location = wkt
@@ -181,7 +181,7 @@ async def message_handler(message: types.Message):
 async def message_handler(message: types.Message, state: FSMContext):
     try:
         lat, lon = geocoder.get_coordinates_by_text(message.text)
-        wkt = f"POINT({lon} {lat})"
+        wkt = f"POINT({lat} {lon})"
 
         user: User = user_by_id[message.from_user.id]
         user.to_location = wkt

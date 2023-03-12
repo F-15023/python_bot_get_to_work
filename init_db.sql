@@ -96,41 +96,48 @@ returns table (
   end_point_distance float) as
 $$
 DECLARE
-  driver_route geometry;
+  _driver_route geometry;
 BEGIN
-  driver_route := (select ST_Transform(route, 3857) from driver_routes where driver_routes.id = _driver_id);
+  _driver_route := (select route from driver_routes where driver_routes.id = _driver_id);
   RETURN QUERY
 	  SELECT passenger_bio.id, passenger_bio.phone, passenger_bio.name,
-	  ST_Distance(ST_Transform(start_point, 3857),driver_route),
-	  ST_Distance(ST_Transform(finish_point, 3857), driver_route)
-	  FROM passenger_bio, passenger_routes
-	  WHERE ST_Distance(ST_Transform(start_point, 3857),driver_route) <= _max_distance
-	  OR ST_Distance(ST_Transform(finish_point, 3857), driver_route) <= _max_distance;
+	  ST_Distance(start_point, _driver_route),
+	  ST_Distance(finish_point, _driver_route)
+	  FROM passenger_bio JOIN passenger_routes ON passenger_bio.id=passenger_routes.id
+	  WHERE ST_Distance(start_point, _driver_route) <= _max_distance
+	  OR ST_Distance(finish_point, _driver_route) <= _max_distance;
   END; $$
 LANGUAGE 'plpgsql';
 
 DROP FUNCTION IF EXISTS get_drivers_near_passenger(bigint, bigint);
-CREATE OR REPLACE FUNCTION get_drivers_near_passenger(_id bigint, _max_distance bigint)
-returns table (
-  id bigint,
-  phone text,
-  name text,
-  start_point_distance float,
-  end_point_distance float) as
-$$
+CREATE OR REPLACE FUNCTION public.get_drivers_near_passenger(
+	_id bigint,
+	_max_distance bigint)
+    RETURNS TABLE(id bigint, phone text, name text, start_point_distance double precision, end_point_distance double precision)
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE PARALLEL UNSAFE
+    ROWS 1000
+
+AS $BODY$
 DECLARE
   _start_point geometry;
   _finish_point geometry;
 BEGIN
-  _start_point := (select ST_Transform(start_point, 3857) from passenger_routes where passenger_routes.id = _id);
-  _finish_point := (select ST_Transform(finish_point, 3857) from passenger_routes where passenger_routes.id = _id);
+  _start_point := (select start_point from passenger_routes where passenger_routes.id = _id);
+  _finish_point := (select finish_point from passenger_routes where passenger_routes.id = _id);
+
+  raise notice '%', ( SELECT ST_Distance(driver_routes.route, _start_point)	  FROM driver_routes);
+  raise notice '%',( SELECT ST_Distance(driver_routes.route, _finish_point)	  FROM driver_routes);
+--   raise notice '%', ();
+
   RETURN QUERY
 	  SELECT driver_bio.id, driver_bio.phone, driver_bio.name,
-	  ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point),
-	  ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point)
-	  FROM driver_bio, driver_routes
-	  WHERE ST_Distance(ST_Transform(driver_routes.route, 3857),_start_point) <= _max_distance
-	  OR ST_Distance(ST_Transform(driver_routes.route, 3857), _finish_point) <= _max_distance;
-  END; $$
-LANGUAGE 'plpgsql';
+	  ST_Distance(driver_routes.route, _start_point),
+	  ST_Distance(driver_routes.route, _finish_point)
+	  FROM driver_bio JOIN driver_routes ON driver_bio.id=driver_routes.id
+	  WHERE ST_Distance(driver_routes.route,_start_point) <= _max_distance
+	  OR ST_Distance(driver_routes.route, _finish_point) <= _max_distance;
+  END;
+$BODY$;
 	
