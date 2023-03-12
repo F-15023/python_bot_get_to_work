@@ -1,23 +1,21 @@
 import asyncio
 from aiogram import Bot, Dispatcher
-from aiogram.fsm.state import StatesGroup, State
 
-from handlers import registration
-from src.handlers import start, driver, passenger
+from src.dao.db_postgres import DBPostgres
+from src.handlers import start_handler, driver_handler, passenger_handler, registration_handler
 
 
-async def main():
+async def run():
     BOT_TOKEN = '5140163343:AAGaFLxhYrbFMaZ0aV0SRxHNgpJ4J3ld6EE'
-    bot = Bot(token=BOT_TOKEN)
+    my_bot: Bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
-    dp.include_router(start.router)
-    dp.include_router(registration.router)
-    dp.include_router(driver.router)
-    dp.include_router(passenger.router)
-
-    await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+    dp.include_router(start_handler.router)
+    dp.include_router(registration_handler.router)
+    dp.include_router(driver_handler.router)
+    dp.include_router(passenger_handler.router)
+    await my_bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(my_bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(run())

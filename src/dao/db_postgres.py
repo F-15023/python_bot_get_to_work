@@ -1,7 +1,5 @@
-import math
-
 import psycopg2
-
+from src.utils.client import Client
 from src.utils.user import User
 
 
@@ -96,7 +94,7 @@ class DBPostgres:
         print("Postgres version:")
         print(db_version)
 
-    def get_passengers_near_driver(self, uid):
+    def get_passengers_near_driver_as_text(self, uid):
         max_distance = 500
         query_string = f"SELECT * FROM get_passengers_near_driver_route({uid},{max_distance})"
         self.cursor.execute(query_string)
@@ -111,7 +109,22 @@ class DBPostgres:
                                             f"Расстояние от моего маршрута до конечной точки пассажира={int(row[4])} м\n"
         return string_result
 
-    def get_drivers_near_passenger(self, uid):
+    def get_passengers_near_driver(self, uid):
+        max_distance = 500
+        query_string = f"SELECT * FROM get_passengers_near_driver_route({uid},{max_distance})"
+        self.cursor.execute(query_string)
+        result = self.cursor.fetchall()
+        passengers = []
+        for row in result:
+            tg_id = row[0]
+            phone = row[1]
+            name = row[2]
+            distance_from = row[3]
+            distance_to = row[4]
+            passengers.append(Client(tg_id, phone, name, distance_from, distance_to))
+        return passengers
+
+    def get_drivers_near_passenger_as_text(self, uid):
         max_distance = 500
         query_string = f"SELECT * FROM get_drivers_near_passenger({uid},{max_distance})"
         self.cursor.execute(query_string)
@@ -126,38 +139,28 @@ class DBPostgres:
                                             f"Расстояние от моей конечной точки  до маршрута водителя={int(row[4])} м\n"
         return string_result
 
+    def get_drivers_near_passenger(self, uid):
+        max_distance = 500
+        query_string = f"SELECT * FROM get_drivers_near_passenger({uid},{max_distance})"
+        self.cursor.execute(query_string)
+        result = self.cursor.fetchall()
+        drivers = []
+        for row in result:
+            tg_id = row[0]
+            phone = row[1]
+            name = row[2]
+            distance_from = row[3]
+            distance_to = row[4]
+            drivers.append(Client(tg_id, phone, name, distance_from, distance_to))
+        return drivers
+
+
+
     def close(self):
         """Закрываем соединение с БД"""
         self.conn.close()
 
-    # def get_tile_image_for_coordinate(self, x, y):
-    #     # https://wiki.openstreetmap.org/wiki/Zoom_levels
-    #     zoom = 16
-    #     count = math.pow(zoom, 4)
-    #     x_length = 360 / count
-    #     y_length = 180 / count
-    #     x_n = int(x / x_length)
-    #     y_n = int(y / y_length)
-    #     print(f"https://tile.openstreetmap.org/{zoom}/{y_n}/{x_n}.png")
-
 
 if __name__ == "__main__":
-    print("Test somthing!")
+    print("Test somthing:")
     db = DBPostgres()
-    db.show_postgres_version()
-    db.get_user_role(248878066)
-
-    # db.add_passenger(1, 88005553535, "ivan", "POINT(52.421357642664816 55.75949648328125)",
-    #                  "POINT(52.438680649410675 55.729554159602486)")
-    #
-    # db.add_passenger(2, 88005553535, "ivan", "POINT(52.301030261704966 55.689382693197516)",
-    #                  "POINT(52.438680649410675 55.729554159602486)")
-    #
-    # db.add_driver(1, 88005553535, "ivan",
-    #               "POINT(52.42039862493415 55.76275391749965)",
-    #               "POINT(52.438640649410675 55.729554159602486)",
-    #               "LINESTRING(52.415404619889046 55.758161010142025,52.42776423902967 55.75081935327739,52.434115709976936 55.73323239955028,52.41471797438123 55.7208588050705)")
-
-    # db.get_passengers_near_driver_route(1)
-
-    # db.get_tile_image_for_coordinate(52.42039862493415, 55.76275391749965)

@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, types, Bot
 from aiogram.filters import Text
 from aiogram.fsm.state import StatesGroup, State
 
@@ -11,6 +11,8 @@ router = Router()
 geocoder = Geocoder()
 user_by_id = {}
 db = DBPostgres()
+BOT_TOKEN = '5140163343:AAGaFLxhYrbFMaZ0aV0SRxHNgpJ4J3ld6EE'
+my_bot: Bot = Bot(token=BOT_TOKEN)
 
 
 class States(StatesGroup):

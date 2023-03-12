@@ -1,7 +1,8 @@
-from aiogram import types, Router, F
+from aiogram import types, Router, F, Bot
 from aiogram.filters import Text
+
 from src.dao.db_postgres import DBPostgres
-from src.handlers.start import States, driver_ready, passenger_ready
+from src.handlers.start_handler import States, driver_ready, passenger_ready
 from src.utils.geocoding import Geocoder
 from src.utils.user import User
 from aiogram.fsm.context import FSMContext
@@ -10,6 +11,8 @@ router = Router()
 geocoder = Geocoder()
 user_by_id = {}
 db = DBPostgres()
+BOT_TOKEN = '5140163343:AAGaFLxhYrbFMaZ0aV0SRxHNgpJ4J3ld6EE'
+my_bot: Bot = Bot(token=BOT_TOKEN)
 
 
 @router.message(States.registration, Text(text=['Нет, в другой раз...']))
